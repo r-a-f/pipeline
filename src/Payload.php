@@ -38,26 +38,19 @@ class Payload implements PayloadInterface
         return $this;
     }
 
-    private function setInitialData($data): Payload
+    private function setInitialData(array $data)
     {
-        $options = [];
         foreach ($data as $p) {
-            $options[] = (array)$p;
+            //@todo feature; optimalize this
+            $this->initial_data = array_merge($this->initial_data, (array)$p);
         }
-
-        $this->initial_data = array_merge([], ...$options);
 
         return $this;
     }
 
-    public function setStageData(...$params): Payload
+    public function setStageData(array $params)
     {
-        $options = [];
-        foreach ($params as $p) {
-            $options[] = (array)$p;
-        }
-
-        $this->stage_data = array_merge([], ...$options);
+        $this->stage_data = array_merge($this->stage_data, $params);
 
         return $this;
     }
@@ -105,14 +98,28 @@ class Payload implements PayloadInterface
         return $this->initial_data;
     }
 
+    /**
+     * Return mixed initial and stage data with initial data priority
+     *
+     * @param null $key
+     *
+     * @return mixed
+     */
     public function getData($key = null)
     {
-        $data = $this->getInitialData($key);
-        if ($data === null) {
-            $data = $this->getStageData($key);
+        if ($key === null) {
+            $data_initial = $this->getInitialData();
+            $data_stage   = $this->getStageData();
+
+            return array_merge($data_stage, $data_initial);
         }
 
-        return $data;
+        $data_initial = $this->getInitialData($key);
+        if ($data_initial) {
+            return $data_initial;
+        }
+
+        return $this->getStageData($key);
     }
 
     public function getMessage()
